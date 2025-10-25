@@ -1,20 +1,117 @@
-import { Home } from 'lucide-react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { SchoolProvider } from './context/SchoolContext';
+import { Layout } from './components/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { Login } from './pages/Login';
+import { Dashboard } from './pages/Dashboard';
+import { SchoolManagement } from './pages/SchoolManagement';
+import { Branding } from './pages/Branding';
+import { Uploads } from './pages/Uploads';
+import { SurveyBuilder } from './pages/SurveyBuilder';
+import { Portal } from './pages/Portal';
+import { DataManagement } from './pages/DataManagement';
+import { useEffect } from 'react';
+import { initializeDemoData } from './utils/mockData';
+
+function AppRoutes() {
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    initializeDemoData();
+  }, []);
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />}
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/schools"
+        element={
+          <ProtectedRoute allowedRoles={['superadmin']}>
+            <Layout>
+              <SchoolManagement />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portal"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'teacher', 'viewer']}>
+            <Layout>
+              <Portal />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/surveys"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'teacher']}>
+            <Layout>
+              <SurveyBuilder />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/uploads"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'teacher']}>
+            <Layout>
+              <Uploads />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/branding"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <Layout>
+              <Branding />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/data"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <Layout>
+              <DataManagement />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-6">
-          <Home className="w-8 h-8 text-white" />
-        </div>
-        <h1 className="text-4xl font-bold text-slate-900 mb-2">
-          Welcome to Your App
-        </h1>
-        <p className="text-lg text-slate-600">
-          Your application is now running successfully
-        </p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <SchoolProvider>
+          <AppRoutes />
+        </SchoolProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
